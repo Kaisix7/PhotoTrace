@@ -1,0 +1,35 @@
+{
+    "tool": "PhotoTrace",
+    "version": "1.0",
+    "analysis_date": "2026-11-16T06:58:46",
+    "file": "train.jpg",
+    "file_size_bytes": 95058,
+    "image": {
+        "format": "JPEG",
+        "mime_type": "image/jpeg",
+        "width": 720,
+        "height": 1280,
+        "megapixels": 0.9216,
+        "encoding": 2,
+        "exif_version": "0220"
+    },
+    "camera": {
+        "manufacturer": null,
+        "model": null,
+        "lens": null
+    },
+    "dates": {
+        "original": null,
+        "created": null,
+        "modified": null
+    },
+    "gps": {
+        "available": false,
+        "latitude": null,
+        "longitude": null,
+        "altitude": null,
+        "maps_url": null
+    },
+    "software": "Google",
+    "privacy_flags": []
+}

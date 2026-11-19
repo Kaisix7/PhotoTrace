@@ -1,0 +1,1 @@
+"""PhotoTrace FastAPI backend package."""
