@@ -33,3 +33,6 @@ htmlcov/
 
 # macOS
 .DS_Store
+# Private forensic reports
+/gps_report.json
+/reports/train_report.json
