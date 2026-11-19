@@ -1,64 +1,86 @@
 # PhotoTrace 2.0
 
-PhotoTrace is a standalone, local-first digital forensics application for
-inspecting image metadata, GPS information, JPEG structure, timestamp timelines,
-and metadata integrity indicators.
+PhotoTrace is a local-first image forensics workspace for inspecting the
+metadata and file structure behind an image. It is intended for education,
+demonstrations, engineering portfolios, and preliminary evidence review — not
+for making independent authenticity or fraud determinations.
 
-The application uses a React and TypeScript frontend, a FastAPI Python backend,
-and ExifTool for metadata extraction. Images and metadata remain on the local
-machine.
+The application keeps uploaded files in temporary local storage, analyzes them
+with a FastAPI/Python backend, and presents the results in a React/TypeScript
+web interface. No image is sent to an external analysis service by PhotoTrace.
 
-## Features
+## What it does
 
-- JPEG, PNG, TIFF, WebP, BMP, GIF, HEIC/HEIF, and supported RAW extensions
-- Full available ExifTool metadata retained in JSON reports
-- Camera, lens, date, software, file, and image properties
-- Validated GPS coordinates with decimal-degree conversion
-- Missing GPS data distinguished from invalid or incomplete GPS data
-- Conservative informational, warning, and suspicious findings
-- Structured JSON forensic reports with SHA-256 file hashes
-- CLI and custom web interface
-- Leaflet map for valid GPS coordinates
-- Advanced JPEG marker and quantization-table structure inspection
-- Metadata timeline construction and timestamp conflict checks
-- EXIF, XMP, dimensions, software, and thumbnail consistency indicators
-- Advanced findings with evidence and explicit detection limitations
+PhotoTrace helps an investigator or developer:
 
-Metadata findings are indicators for review. Missing metadata or timestamp
-inconsistencies do not prove that an image was manipulated or is fraudulent.
+- inspect available EXIF, XMP, file, camera, lens, date, and software metadata;
+- validate and convert GPS coordinates extracted from metadata;
+- view valid coordinates on a Leaflet map;
+- calculate a SHA-256 hash for the analyzed file;
+- inspect JPEG markers, dimensions, quantization tables, EXIF/XMP indicators, and
+  embedded-thumbnail signatures;
+- build a metadata timeline and report timestamp conflicts;
+- compare metadata dimensions and software fields for consistency indicators;
+- generate, display, and download a structured JSON forensic report; and
+- use either the web interface or the command-line entry point.
 
-## Advanced forensic methodology
+Findings are conservative, explainable indicators. They require context and do
+not establish that an image was edited, authentic, or fraudulent.
 
-The advanced analysis performs local structural inspection only. It parses JPEG
-markers and DQT segments, observes start-of-frame dimensions and embedded
-EXIF/XMP indicators, and constructs a timeline from available metadata.
-Quantization-table values, timestamp conflicts, and thumbnail/dimension
-comparisons are reported as forensic indicators. They are not pixel-analysis
-proof, error-level-analysis claims, or authenticity determinations.
+## Technology stack
 
-Example findings include incomplete JPEG structure, conflicting EXIF/image
-dimensions, mixed or incomplete timestamp timezone context, contradictory
-capture/creation/modification ordering, and EXIF/XMP software disagreement.
-Each advanced finding includes severity, technical evidence, an explanation,
-and the limitations of that detection.
+- **Backend:** Python, FastAPI, Uvicorn, Pillow, ExifTool
+- **Frontend:** React 19, TypeScript, Vite
+- **Mapping:** Leaflet and React-Leaflet with OpenStreetMap tiles
+- **Testing:** Python `unittest`, FastAPI `TestClient`, TypeScript/Vite build,
+  and Oxlint
+
+ExifTool is an external system dependency and must be installed separately from
+the Python packages in `requirements.txt`.
 
 ## Architecture
 
 ```text
-frontend/       React 19, TypeScript, Vite, Leaflet
-backend/        FastAPI API and temporary upload handling
-phototrace_app/ Existing forensic analysis modules
-tests/          Backend, API, parser, report, and export tests
+frontend/          React + TypeScript UI and Leaflet map
+backend/main.py    FastAPI routes, CORS, temporary upload handling
+phototrace_app/    Validation, extraction, analysis, and report modules
+phototrace.py      Local command-line entry point
+tests/             API, validation, parser, timeline, and report tests
+reports/            Local report outputs and protected project fixtures
 ```
 
-The backend reuses `phototrace_app` for validation, ExifTool extraction, GPS
-analysis, JPEG structure inspection, timelines, integrity findings, and reports.
+The workflow is:
 
-## Installation
+1. The frontend sends an image as multipart form data.
+2. FastAPI writes it to a temporary directory and enforces the 50 MB limit.
+3. Validation checks the extension, size, and readable raster content where
+   applicable.
+4. ExifTool extracts grouped metadata as JSON.
+5. The analysis modules derive GPS state, integrity findings, JPEG structure,
+   timeline events, and advanced consistency indicators.
+6. The report builder adds file facts, a SHA-256 hash, sanitized metadata paths,
+   findings, and method limitations.
+7. The API returns the report or streams a safe JSON download filename.
 
-Install ExifTool using your operating system package manager.
+## Local installation
 
-For an isolated setup, create a virtual environment in the project directory:
+### Prerequisites
+
+- Python 3.14 or another Python version compatible with the installed
+  dependencies
+- Node.js and npm
+- ExifTool available on `PATH`
+
+Install ExifTool using the package manager for your operating system, then
+verify it:
+
+```bash
+exiftool -ver
+```
+
+### Backend setup
+
+From the project root:
 
 ```bash
 python3 -m venv .venv
@@ -66,80 +88,127 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-Verify ExifTool is available:
+### Frontend setup
 
 ```bash
-exiftool -ver
+npm --prefix frontend install
 ```
 
-## CLI usage
+## Running PhotoTrace
+
+### Web application
+
+Start the local API:
 
 ```bash
-python3 phototrace.py /path/to/image.jpg
-python3 phototrace.py /path/to/image.jpg --reports-dir reports
+.venv/bin/python -m uvicorn backend.main:app --reload \
+  --host 127.0.0.1 --port 8000
 ```
 
-The JSON report is saved in `reports/` by default.
-
-## Web application usage
-
-Install backend dependencies and start FastAPI:
+For frontend development, use a second terminal:
 
 ```bash
-.venv/bin/python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+npm --prefix frontend run dev
 ```
 
-The production frontend build is served automatically at
-`http://127.0.0.1:8000` when `frontend/dist/` exists.
+Open `http://localhost:5173`. The Vite proxy forwards `/api` requests to the
+local FastAPI server at `http://localhost:8000`.
 
-For frontend development:
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-The development interface is available at `http://localhost:5173` and calls the
-API at `http://localhost:8000` by default.
-
-Upload an image through the sidebar interface. The application provides
-Dashboard, Image Analysis, Metadata Explorer, GPS & Location, Integrity
-Analysis, Advanced Forensic Analysis, and Forensic Reports sections. Sensitive
-metadata fields are hidden by default.
-
-## Testing
-
-Run the focused test suite with:
+To serve a production frontend build through FastAPI:
 
 ```bash
-python3 -m unittest discover -s tests -v
 npm --prefix frontend run build
+.venv/bin/python -m uvicorn backend.main:app \
+  --host 127.0.0.1 --port 8000
 ```
+
+Then open `http://127.0.0.1:8000`.
+
+### Command line
+
+```bash
+.venv/bin/python phototrace.py /path/to/image.jpg
+.venv/bin/python phototrace.py /path/to/image.jpg --reports-dir reports
+```
+
+The CLI saves a non-overwriting JSON report in `reports/` by default.
+
+## Web interface sections
+
+The sidebar provides:
+
+- **Dashboard** — analysis status and module overview
+- **Image Analysis** — upload, preview, validation, and analysis
+- **Metadata Explorer** — extracted tags with sensitive fields hidden by default
+- **GPS & Location** — validated coordinates and map display
+- **Integrity Analysis** — SHA-256 and structural summary
+- **Advanced Forensic Analysis** — findings, timeline, JPEG structure, and
+  methodology limitations
+- **Forensic Reports** — report preview and JSON download
 
 ## API
 
-- `GET /api/health`
-- `POST /api/analyze`
-- `POST /api/reports`
-- `POST /api/reports/download`
+- `GET /api/health` — local service health and version
+- `POST /api/analyze` — validate and analyze an uploaded image
+- `POST /api/reports` — return the same report payload as analysis
+- `POST /api/reports/download` — return the report as a JSON attachment
 
-Uploaded files are written to a temporary directory, validated, analyzed, and
-removed automatically. They are not sent to external analysis services.
+Uploaded files are processed in temporary directories and removed after each
+request. The default commands bind to loopback; the API is not designed to be
+an internet-facing, multi-user service without additional authentication,
+resource controls, and deployment hardening.
 
-Reports use safe `<image_name>_report.json` filenames and redact absolute Unix
-and Windows metadata paths. Repeated saved reports do not overwrite earlier files.
+## Testing and quality checks
 
-## Limitations
+Run the checks from the project root:
 
-- ExifTool-supported formats are limited by the installed ExifTool version and
-  the conservative extension validation list.
-- GPS analysis reports extracted coordinates only; it does not infer a location.
-- Integrity checks are heuristic indicators and are not an authenticity verdict.
-- Interactive map tiles may be loaded by the browser from the configured map
-  provider. The provider may receive displayed map coordinates; image files and
-  metadata are not uploaded by PhotoTrace.
-- Leaflet tile providers may receive browser map-coordinate requests when a
-  valid GPS location is displayed. Image files and metadata are not uploaded.
-- Browser download completion is platform-dependent; report JSON and download
-  payload parity are verified in backend tests.
+```bash
+.venv/bin/python -m unittest discover -s tests -v
+npm --prefix frontend run build
+npm --prefix frontend run lint
+```
+
+## Demonstration fixtures and screenshots
+
+The `samples/` directory contains synthetic JPEG fixtures created for safe
+demonstrations. They contain no private photographs:
+
+- `demo_gps.jpg` includes clearly synthetic EXIF, timestamp, and GPS values.
+- `demo_no_gps.jpg` includes synthetic camera metadata without GPS.
+
+The current UI walkthrough was captured from the running local application
+using `demo_gps.jpg`:
+
+- [Dashboard](documentation/screenshots/dashboard.png)
+- [Image Analysis](documentation/screenshots/image-analysis.png)
+- [Metadata Explorer](documentation/screenshots/metadata-explorer.png)
+- [GPS & Location](documentation/screenshots/gps-location.png)
+- [Integrity Analysis](documentation/screenshots/integrity-analysis.png)
+- [Advanced Forensic Analysis](documentation/screenshots/advanced-forensics.png)
+- [Forensic Reports](documentation/screenshots/forensic-reports.png)
+
+## Privacy and limitations
+
+- Metadata can be missing, modified, stale, or unreliable.
+- GPS is read from image metadata; PhotoTrace does not perform visual
+  geolocation or independently verify the location.
+- JPEG marker, quantization-table, thumbnail, timestamp, and software findings
+  are structural or metadata indicators, not proof of manipulation.
+- PhotoTrace cannot independently prove that an image is authentic or fake.
+- Reports retain available metadata for forensic review. Metadata may contain
+  GPS, device identifiers, author fields, or other sensitive values; review
+  reports before sharing them.
+- Absolute Unix and Windows paths are sanitized in generated report payloads,
+  but path sanitization does not remove all personal metadata.
+- When a valid GPS location is shown, the browser requests map tiles from the
+  configured tile provider. The tile provider may observe map coordinates;
+  image files and metadata are not uploaded by PhotoTrace.
+- Supported formats depend on the installed ExifTool version and the
+  conservative extension allowlist.
+
+## Repository hygiene
+
+Generated environments and frontend build dependencies are intentionally
+excluded by `.gitignore`. Do not publish private photographs, raw metadata
+reports, credentials, or reports containing personal locations without
+reviewing them first.

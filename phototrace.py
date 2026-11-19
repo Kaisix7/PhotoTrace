@@ -10,7 +10,7 @@ from phototrace_app.reports import save_report
 
 def display_report(report: dict[str, Any]) -> None:
     print("\n" + "=" * 45)
-    print("             PHOTOTRACE v1.2")
+    print("             PHOTOTRACE v2.0.0")
     print("=" * 45)
 
     print(f"\nFile: {report['original_filename']}")
