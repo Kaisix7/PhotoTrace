@@ -168,24 +168,52 @@ npm --prefix frontend run build
 npm --prefix frontend run lint
 ```
 
-## Demonstration fixtures and screenshots
+## Application Screenshots
 
-The `samples/` directory contains synthetic JPEG fixtures created for safe
-demonstrations. They contain no private photographs:
+The interface below was captured using synthetic, non-private test fixtures.
 
-- `demo_gps.jpg` includes clearly synthetic EXIF, timestamp, and GPS values.
-- `demo_no_gps.jpg` includes synthetic camera metadata without GPS.
+### Dashboard
 
-The current UI walkthrough was captured from the running local application
-using `demo_gps.jpg`:
+Analysis status and a concise overview of the available forensic modules.
 
-- [Dashboard](documentation/screenshots/dashboard.png)
-- [Image Analysis](documentation/screenshots/image-analysis.png)
-- [Metadata Explorer](documentation/screenshots/metadata-explorer.png)
-- [GPS & Location](documentation/screenshots/gps-location.png)
-- [Integrity Analysis](documentation/screenshots/integrity-analysis.png)
-- [Advanced Forensic Analysis](documentation/screenshots/advanced-forensics.png)
-- [Forensic Reports](documentation/screenshots/forensic-reports.png)
+![PhotoTrace Dashboard](documentation/screenshots/dashboard.png)
+
+### Image Analysis
+
+Image upload, preview, SHA-256 hashing, format, dimensions, and GPS status.
+
+![PhotoTrace Image Analysis](documentation/screenshots/image-analysis.png)
+
+### Metadata Explorer
+
+Grouped EXIF, XMP, file, camera, software, timestamp, and GPS metadata.
+
+![PhotoTrace Metadata Explorer](documentation/screenshots/metadata-explorer.png)
+
+### GPS & Location
+
+Validated metadata coordinates displayed with a Leaflet map.
+
+![PhotoTrace GPS and Location](documentation/screenshots/gps-location.png)
+
+### Integrity Analysis
+
+SHA-256 file integrity and JPEG structural inspection.
+
+![PhotoTrace Integrity Analysis](documentation/screenshots/integrity-analysis.png)
+
+### Advanced Forensic Analysis
+
+Metadata timeline, forensic findings, JPEG structure, and detection
+limitations.
+
+![PhotoTrace Advanced Forensic Analysis](documentation/screenshots/advanced-forensics.png)
+
+### Forensic Reports
+
+Structured JSON report preview and downloadable report export.
+
+![PhotoTrace Forensic Reports](documentation/screenshots/forensic-reports.png)
 
 ## Privacy and limitations
 
